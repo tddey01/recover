@@ -200,7 +200,10 @@ func RecoverSealedFile(ctx context.Context, rp export.RecoveryParams, parallel u
 			}
 
 			log.Infof("Start recover sector(%d,%d), registeredSealProof: %d, ticket: %x", actorID, sector.SectorNumber, sector.SealProof, sector.Ticket)
-
+			//              pi, err := sb.AddPiece(context.TODO(), sid, nil, abi.PaddedPieceSize(rp.SectorSize).Unpadded(), nr.NewNullReader(abi.UnpaddedPieceSize(rp.SectorSize)))
+			//              if err != nil {
+			//                      log.Errorf("Sector (%d) ,running AP  error: %v", sector.SectorNumber, err)
+			//              }
 			log.Infof("Start running AP, sector (%d)", sector.SectorNumber)
 
 			c, err := cid.Decode(sector.PieceInfo.PieceCID)
