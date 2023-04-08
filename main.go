@@ -17,9 +17,9 @@
 package main
 
 import (
-	"github.com/froghub-io/filecoin-sealer-recover/export"
-	"github.com/froghub-io/filecoin-sealer-recover/recovery"
 	logging "github.com/ipfs/go-log/v2"
+	"github.com/tddey01/recover/export"
+	"github.com/tddey01/recover/recovery"
 	"github.com/urfave/cli/v2"
 	"os"
 )
