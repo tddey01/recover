@@ -141,8 +141,13 @@ type SectorInfo struct {
 	Ticket       abi.Randomness
 	SealProof    abi.RegisteredSealProof
 	SealedCID    cid.Cid
-	PieceInfo    abi.PieceInfo
+	PieceInfo    *PieceInfo
 }
+type PieceInfo struct {
+	Size     PaddedPieceSize
+	PieceCID string
+}
+type PaddedPieceSize uint64
 
 type SectorInfos []*SectorInfo
 
