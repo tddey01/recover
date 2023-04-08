@@ -23,10 +23,10 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	cliutil "github.com/filecoin-project/lotus/cli/util"
-	nr "github.com/filecoin-project/lotus/storage/pipeline/lib/nullreader"
 	"github.com/filecoin-project/lotus/storage/sealer/ffiwrapper"
 	"github.com/filecoin-project/lotus/storage/sealer/ffiwrapper/basicfs"
 	"github.com/filecoin-project/lotus/storage/sealer/storiface"
+	"github.com/ipfs/go-cid"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/mitchellh/go-homedir"
 	"github.com/tddey01/recover/export"
@@ -181,21 +181,11 @@ func RecoverSealedFile(ctx context.Context, rp export.RecoveryParams, parallel u
 				<-time.After(p1LastTaskTime.Sub(time.Now()))
 			}
 			p1LastTaskTime = time.Now()
-
-			sdir, err := homedir.Expand(sealingTemp)
-			if err != nil {
-				log.Errorf("Sector (%d) ,expands the path error: %v", sector.SectorNumber, err)
-			}
+			sdir := sealingTemp
 			mkdirAll(sdir)
-			tempDir, err := ioutil.TempDir(sdir, fmt.Sprintf("recover-%d", sector.SectorNumber))
-			if err != nil {
-				log.Errorf("Sector (%d) ,creates a new temporary directory error: %v", sector.SectorNumber, err)
-			}
-			if err := os.MkdirAll(tempDir, 0775); err != nil {
-				log.Errorf("Sector (%d) ,creates a directory named path error: %v", sector.SectorNumber, err)
-			}
+
 			sb, err := ffiwrapper.New(&basicfs.Provider{
-				Root: tempDir,
+				Root: sdir,
 			})
 			if err != nil {
 				log.Errorf("Sector (%d) ,new ffi Sealer error: %v", sector.SectorNumber, err)
@@ -212,10 +202,17 @@ func RecoverSealedFile(ctx context.Context, rp export.RecoveryParams, parallel u
 			log.Infof("Start recover sector(%d,%d), registeredSealProof: %d, ticket: %x", actorID, sector.SectorNumber, sector.SealProof, sector.Ticket)
 
 			log.Infof("Start running AP, sector (%d)", sector.SectorNumber)
-			pi, err := sb.AddPiece(context.TODO(), sid, nil, abi.PaddedPieceSize(rp.SectorSize).Unpadded(), nr.NewNullReader(abi.UnpaddedPieceSize(rp.SectorSize)))
+
+			c, err := cid.Decode(sector.PieceInfo.PieceCID)
 			if err != nil {
-				log.Errorf("Sector (%d) ,running AP  error: %v", sector.SectorNumber, err)
+				log.Errorf("failed to parse cid input: %w", err)
+				return
 			}
+			pi := abi.PieceInfo{
+				Size:     abi.PaddedPieceSize(sector.PieceInfo.Size),
+				PieceCID: c,
+			}
+
 			var pieces []abi.PieceInfo
 			pieces = append(pieces, pi)
 			log.Infof("Complete AP, sector (%d)", sector.SectorNumber)
@@ -232,7 +229,7 @@ func RecoverSealedFile(ctx context.Context, rp export.RecoveryParams, parallel u
 				log.Errorf("Sector (%d) , running PreCommit2  error: %v", sector.SectorNumber, err)
 			}
 
-			err = MoveStorage(ctx, sid, tempDir, sealingResult)
+			err = MoveStorage(ctx, sid, sdir, sealingResult)
 			if err != nil {
 				log.Errorf("Sector (%d) , running MoveStorage  error: %v", sector.SectorNumber, err)
 			}
