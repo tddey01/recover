@@ -9,7 +9,7 @@ replace github.com/filecoin-project/lotus => ./extern/lotus
 require (
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-state-types v0.10.0
-	github.com/filecoin-project/lotus v1.19.0
+	github.com/filecoin-project/lotus v1.20.4
 	github.com/ipfs/go-cid v0.3.2
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/mitchellh/go-homedir v1.1.0
